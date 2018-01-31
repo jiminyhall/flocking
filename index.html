@@ -1,0 +1,134 @@
+<!Doctype html>
+<html>
+<head></head>
+<body onload="draw()">
+
+  <canvas id="canvas" width="1200" height="600" style="border: 1px solid black"></canvas>
+  <br>
+  <button onclick='move()'>Move</button>
+  <button onclick='rotate()'>Rotate</button>
+  <button onclick='start()'>Start</button>
+  <button onclick='stop()'>Stop</button>
+  <button onclick='add()'>Add</button>
+  <br>
+  <div id='info'>x:
+    <br>y:
+    <br>r:
+  </div>
+  <script>
+
+  var agents;
+  var myInterval;
+
+  function add() {
+    agents.push(new Agent(150,75,0,(Math.random()*2)+1,"bird.png"));
+  }
+
+  function draw() {
+
+    agents = [new Agent(150,75,0,1,"bird.png")];
+
+  }
+
+  function stop() {
+    clearInterval(myInterval);
+  }
+
+  function start() {
+    myInterval = setInterval(function() { update(); }, 20);
+  }
+
+  function update() {
+
+      clear();
+      // go through each agent and move/turn, then draw (avoids iterating list twice)
+
+      for(i=0; i<agents.length; i++) {
+        var rand = Math.random();
+        if(rand<0.9) {
+          agents[i].forward();
+        } else {
+          agents[i].rotate((Math.random()*30)-15);
+        }
+        agents[i].draw();
+      }
+
+
+  }
+
+  function Agent(x, y, rotation, speed, src) {
+
+    this.rotation = rotation;
+    this.speed = speed;
+    this.x = x;
+    this.y = y;
+    this.image = new Image();
+
+    this.image.onload = function() {
+        document.getElementById('canvas').getContext('2d').drawImage(this,x-this.width/2,y-this.height/2);
+        document.getElementById('info').innerHTML = "x: " + x + "<br>y: " + y + "<br>r: " + rotation;
+    };
+
+    this.image.src = src;
+
+    this.forward = function() {
+
+      this.x += this.speed*Math.sin(this.rotation*Math.PI/180);
+      this.y -= this.speed*Math.cos(this.rotation*Math.PI/180);
+
+
+
+      // if moving takes over the edge of canvas then reposition
+      if(this.y<0) {
+          this.y = document.getElementById('canvas').height - this.y;
+          //this.x = document.getElementById('canvas').width - this.x;
+      } else if(this.y>document.getElementById('canvas').height) {
+          this.y = this.y-document.getElementById('canvas').height;
+          //this.x = document.getElementById('canvas').width - this.x;
+      }
+
+      if(this.x<0) {
+          this.x = document.getElementById('canvas').width - this.x;
+          //this.y = document.getElementById('canvas').height - this.y;
+      } else if(this.x>document.getElementById('canvas').width) {
+          this.x = this.x-document.getElementById('canvas').width;
+          //this.y = document.getElementById('canvas').height - this.y;
+      }
+
+    };
+
+    this.rotate = function(degrees) {
+        this.rotation += degrees;
+        if(this.rotation>359) this.rotation=this.rotation-360;
+        if(this.rotation<0) this.rotation=this.rotation+360;
+    }
+
+    this.draw = function() {
+      var ctx = document.getElementById('canvas').getContext('2d');
+      ctx.save();
+      ctx.translate(this.x,this.y);
+      ctx.rotate(this.rotation*Math.PI/180);
+      ctx.drawImage(this.image,this.image.width/-2,this.image.height/-2);
+      ctx.restore();
+      document.getElementById('info').innerHTML = "x: " + this.x + "<br>y: " +this.y+ "<br>r: " + this.rotation;
+    };
+
+  }
+
+
+  function clear() {
+    // clear the canvas
+    var w = document.getElementById('canvas').width;
+    var h = document.getElementById('canvas').height;
+    console.log("W/h:" + w + "/" + h);
+    document.getElementById('canvas').getContext('2d').clearRect(0,0,w,h);
+  }
+
+
+
+  </script>
+
+
+
+</body>
+</html>
