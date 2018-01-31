@@ -6,8 +6,6 @@
   <canvas id="canvas" width="300" height="500" style="border: 1px solid black"></canvas>
   <br>
   <div id='controls'>
-  <button onclick='move()'>Move</button>
-  <button onclick='rotate()'>Rotate</button>
   <button onclick='start()'>Start</button>
   <button onclick='stop()'>Stop</button>
   <button onclick='add()'>Add</button>
@@ -29,8 +27,8 @@
    *    - more control/information
    */
 
-  var agents;
-  var myInterval;
+  var agents;     //list of all agents on the canvas
+  var myInterval; //window timer
 
   function add() {
     agents.push(new Agent(150,75,0,(Math.random()*2)+1,"bird.png"));
