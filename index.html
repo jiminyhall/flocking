@@ -1,20 +1,31 @@
 <!Doctype html>
-<html>
-<head></head>
-<body onload="draw()" style="text-align:center;">
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="css/press-2-0.css" rel="stylesheet">
 
-  <canvas id="canvas" width="300" height="500" style="border: 1px solid black"></canvas>
-  <br>
+  <title>Birds of a feather, flock together.</title>
+</head>
+
+<body onload="draw()">
+
+  <canvas id="canvas" style="border: 1px solid black;"></canvas>
+
   <div id='controls'>
-  <button onclick='start()'>Start</button>
-  <button onclick='stop()'>Stop</button>
-  <button onclick='add()'>Add</button>
+    <button class="press press-round press-amber" onclick='start()'>Start</button>
+    <button class="press press-round press-amber" onclick='stop()'>Stop</button>
+    <button class="press press-round press-amber" onclick='add()'>Add</button>
+    <input type="checkbox" id="showBounds" name="showBounds" value="showBounds" checked="true" onclick="showBoundsClicked(this)">
+      <label for="showBounds">Show bounds</label>
   </div>
-  <br>
+
   <div id='info' style='display:none;'>x:
     <br>y:
     <br>r:
   </div>
+
   <script>
 
   /* BASIC FLOCKING BEHAVIOUR use this tutorial
@@ -29,9 +40,23 @@
 
   var agents;     //list of all agents on the canvas
   var myInterval; //window timer
+  var showBounds = true;
+
+  function showBoundsClicked(evt) {
+    console.log("CB clicked");
+    showBounds = evt.checked;
+    clear();
+    for(i=0; i<agents.length; i++) { agents[i].draw(); };
+
+  }
 
   function add() {
-    agents.push(new Agent(150,75,0,(Math.random()*2)+1,"bird.png"));
+    var ctx = document.getElementById('canvas').getContext('2d');
+    agents.push(new Agent(Math.random()*ctx.canvas.width,     //x
+                          Math.random()*ctx.canvas.height,    //y
+                          Math.random()*360,                  //rotation
+                          (Math.random()*2)+1,                //speed
+                          "bird.png"));                       //sprite
   }
 
   function draw() {
@@ -39,7 +64,7 @@
     var ctx = document.getElementById('canvas').getContext('2d');
     ctx.canvas.width = window.innerWidth-20;
     ctx.canvas.height = window.innerHeight*0.9;
-    agents = [new Agent(150,75,0,1,"bird.png")];
+    agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
 
   }
 
@@ -144,16 +169,18 @@
       ctx.save();
       ctx.translate(this.x,this.y);
 
-      // Draw bounding
-      ctx.beginPath();
-      // ctx.arc(0,0,100,0,2*Math.PI);
-      ctx.rect(100/-2,100/-2,100,100);
-      if(this.neighbourCount>1) {
-        ctx.strokeStyle='red';
-      } else {
-        ctx.strokeStyle='black';
+      if(showBounds) {
+        // Draw bounding
+        ctx.beginPath();
+        // ctx.arc(0,0,100,0,2*Math.PI);
+        ctx.rect(100/-2,100/-2,100,100);
+        if(this.neighbourCount>1) {
+          ctx.strokeStyle='red';
+        } else {
+          ctx.strokeStyle='black';
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
 
       // rotate and draw image
       ctx.rotate(this.rotation*Math.PI/180);
@@ -176,7 +203,6 @@
 
 
   </script>
-
 
 
 </body>
