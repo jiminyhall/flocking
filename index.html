@@ -55,7 +55,7 @@
     agents.push(new Agent(Math.random()*ctx.canvas.width,     //x
                           Math.random()*ctx.canvas.height,    //y
                           Math.random()*360,                  //rotation
-                          (Math.random()*2)+1,                //speed
+                          1,                                  //speed - was using a randomised value but removing for alignment // (Math.random()*2)+1,
                           "bird.png"));                       //sprite
   }
 
@@ -88,10 +88,16 @@
         } else {
           agents[i].rotate((Math.random()*30)-15);
         }
-        // check if any are within radius
-        var newArry = agents.filter(function (el) {
-          return el.testCircle(agents[i].x, agents[i].y);
-        })
+        // return an array of agents which are within within radius
+        var newArry = agents.filter(function (el) { return el.testCircle(agents[i].x, agents[i].y); });
+
+        if(newArry.length>1) {
+          var averageRotation = newArry.reduce(function (total, el) { console.log("el.rat"); return total+el.rotation; },0);
+          averageRotation = averageRotation/newArry.length;
+          console.log(averageRotation);
+          agents[i].rotation=averageRotation;
+        }
+
         //console.log(newArry.length);
         // if(newArry.length>1) { console.log("HIT"); };
         agents[i].neighbourCount = newArry.length;
