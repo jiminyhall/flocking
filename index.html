@@ -17,8 +17,17 @@
     <button class="press press-round press-amber" onclick='start()'>Start</button>
     <button class="press press-round press-amber" onclick='stop()'>Stop</button>
     <button class="press press-round press-amber" onclick='add()'>Add</button>
+
     <input type="checkbox" id="showBounds" name="showBounds" value="showBounds" checked="true" onclick="showBoundsClicked(this)">
-      <label for="showBounds">Show bounds</label>
+    <label for="showBounds">Bounds</label>
+    <span id="boundsVal"></span>
+    <button class="press press-round press-amber" onclick='boundsChange(0.1)'>/\</button>
+    <button class="press press-round press-amber" onclick='boundsChange(-0.1)'>\/</button>
+
+    <span>Alignment Weight: <span id="alignmentVal"></span></span>
+    <button class="press press-round press-amber" onclick='alignmentChange(0.1)'>/\</button>
+    <button class="press press-round press-amber" onclick='alignmentChange(-0.1)'>\/</button>
+
   </div>
 
   <div id='info' style='display:none;'>x:
@@ -41,6 +50,24 @@
   var agents;     //list of all agents on the canvas
   var myInterval; //window timer
   var showBounds = true;
+  var boundsWeight = 1.0;
+  var alignmentWeight = 1.0;
+
+  function boundsChange(val) {
+    boundsWeight += val;
+    if(boundsWeight < 0.1) boundsWeight = 0.1;
+    document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
+    clear();
+    for(i=0; i<agents.length; i++) { agents[i].draw(); };
+  }
+
+  function alignmentChange(val) {
+    alignmentWeight += val;
+    if(alignmentWeight < 0.0) alignmentWeight = 0.0;
+    if(alignmentWeight > 1.0) alignmentWeight = 1.0;
+    document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
+  }
+
 
   function showBoundsClicked(evt) {
     console.log("CB clicked");
@@ -64,6 +91,8 @@
     var ctx = document.getElementById('canvas').getContext('2d');
     ctx.canvas.width = window.innerWidth-20;
     ctx.canvas.height = window.innerHeight*0.9;
+    document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
+    document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
     agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
 
   }
@@ -95,7 +124,9 @@
           var averageRotation = newArry.reduce(function (total, el) { console.log("el.rat"); return total+el.rotation; },0);
           averageRotation = averageRotation/newArry.length;
           console.log(averageRotation);
-          agents[i].rotation=averageRotation;
+          var differenceRotation = averageRotation - agents[i].rotation;
+          var weightedRotation = differenceRotation * alignmentWeight;
+          agents[i].rotation+=weightedRotation;
         }
 
         //console.log(newArry.length);
@@ -124,10 +155,10 @@
     this.image.src = src;
 
     this.testCircle = function(dx,dy) {
-        if( dx>this.x-(this.collisionRadius/2) &&
-            dx<this.x+(this.collisionRadius/2) &&
-            dy>this.y-(this.collisionRadius/2) &&
-            dy<this.y+(this.collisionRadius/2))
+        if( dx>this.x-((this.collisionRadius*boundsWeight)/2) &&
+            dx<this.x+((this.collisionRadius*boundsWeight)/2) &&
+            dy>this.y-((this.collisionRadius*boundsWeight)/2) &&
+            dy<this.y+((this.collisionRadius*boundsWeight)/2))
         {
             return true;
         } else {
@@ -179,7 +210,7 @@
         // Draw bounding
         ctx.beginPath();
         // ctx.arc(0,0,100,0,2*Math.PI);
-        ctx.rect(100/-2,100/-2,100,100);
+        ctx.rect((this.collisionRadius*boundsWeight)/-2,(this.collisionRadius*boundsWeight)/-2,this.collisionRadius*boundsWeight,this.collisionRadius*boundsWeight);
         if(this.neighbourCount>1) {
           ctx.strokeStyle='red';
         } else {
