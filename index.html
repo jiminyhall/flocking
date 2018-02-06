@@ -30,7 +30,8 @@
 
   </div>
 
-  <div id='info' style='display:none;'>x:
+  <div id='info' style='display:none;'>
+    x:
     <br>y:
     <br>r:
   </div>
@@ -45,6 +46,7 @@
    *    - change behaviour based on neighbour count
    *    - add different kinds of birds
    *    - more control/information
+   *    - uniform grid collision detection
    */
 
   var agents;     //list of all agents on the canvas
@@ -113,27 +115,54 @@
       // go through each agent and move/turn, then draw (avoids iterating list twice)
 
       for(i=0; i<agents.length; i++) {
-        var rand = Math.random();
-        if(rand<0.9) {
-          agents[i].forward();
-        } else {
-          agents[i].rotate((Math.random()*30)-15);
-        }
-        // return an array of agents which are within within radius
-        var newArry = agents.filter(function (el) { return el.testCircle(agents[i].x, agents[i].y) && el!=agents[i]; });
 
-        if(newArry.length>0) {
-          var averageRotation = newArry.reduce(function (total, el) { console.log("el.rat"); return total+el.rotation; },0);
-          averageRotation = averageRotation/newArry.length;
-          console.log(averageRotation);
+        // return an array of agents which are within within radius
+        var neighbourhood = agents.filter(function (el) { return el.testCircle(agents[i].x, agents[i].y) && el!=agents[i]; });
+
+        if(neighbourhood.length>0) {
+          /* If one or more agents in within its radius (or neighbourhood) then there are three flocking behviours to apply
+           * 1. alignment - the agents will change path to an average
+           * 2. cohesion - the agents will try and move to be closer together
+           * 3. seperation - the agents will try and keep a certain distance away from each other
+           */
+
+          /* 1. Alignment
+           * This section adds in the weight of the rotation (between 0 and 1), finds the difference between the
+           * target and current then adds a proportion based on the alignmentWeight */
+          var averageRotation = neighbourhood.reduce(function (total, el) { return total+el.rotation; },0) / neighbourhood.length;
           var differenceRotation = averageRotation - agents[i].rotation;
           var weightedRotation = differenceRotation * alignmentWeight;
           agents[i].rotation+=weightedRotation;
+
+          /* 2. Cohesion
+           *     - find the average new X and Y from the neighbourhood
+           *     - find the angle to the new point (rotation)
+           *     - apply weighting and add to existing rotation
+           */
+          var averageLocation_X = neighbourhood.reduce(function (total, el) { return total+el.x; },agents[i].x) / neighbourhood.length+1;
+          var averageLocation_Y = neighbourhood.reduce(function (total, el) { return total+el.y; },agents[i].y) / neighbourhood.length+1;
+          var tx = averageLocation_X - agents[i].x;
+          var ty = averageLocation_Y - agents[i].y;
+          var t_rot = Math.atan2(tx,ty) * (180/Math.PI);
+          if(t_rot<0) t_rot=360+t_rot;
+          console.log("neighbours: " + neighbourhood.length + " t x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot);
+          var diff_rot = t_rot-agents[i].rotation;
+          weightedRotation = diff_rot * 1;
+          agents[i].rotation=weightedRotation;
+
+        } else {
+          // if no neighbours then randomise rotation
+          var rand = Math.random();
+          if(rand<0.1)
+            agents[i].rotate((Math.random()*30)-15);
+
         }
+
+        agents[i].forward();
 
         //console.log(newArry.length);
         // if(newArry.length>1) { console.log("HIT"); };
-        agents[i].neighbourCount = newArry.length;
+        agents[i].neighbourCount = neighbourhood.length;
         agents[i].draw();
       }
   }
@@ -213,9 +242,11 @@
         ctx.beginPath();
         // ctx.arc(0,0,100,0,2*Math.PI);
         ctx.rect((this.collisionRadius*boundsWeight)/-2,(this.collisionRadius*boundsWeight)/-2,this.collisionRadius*boundsWeight,this.collisionRadius*boundsWeight);
-        if(this.neighbourCount>1) {
+        if(this.neighbourCount>0) {
+          // if a neighbour is present then colour in red
           ctx.strokeStyle='red';
         } else {
+          // else colour it in black
           ctx.strokeStyle='black';
         }
         ctx.stroke();
