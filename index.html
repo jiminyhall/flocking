@@ -114,8 +114,12 @@
 
   function onmousedown(e) {
 
-    /* NEED TO FIGURE OUT THE EVENT X/Ys AND WHAT THEY RETURN FROM THE MOUSE EVENT */
-    
+    /* NEED TO FIGURE OUT THE EVENT X/Ys AND WHAT THEY RETURN FROM THE MOUSE EVENT
+     *
+     * READ THIS: http://www.informit.com/articles/article.aspx?p=1903884&seqNum=6
+     *
+    */
+
     var ctx = document.getElementById('canvas').getContext('2d');
     console.log("Mouse clicked: " + (e.clientX-ctx.canvas.offsetTop) + "," + (e.clientY-ctx.canvas.offsetLeft));
     //check if any of the existing agents have been clicked (return first one)
