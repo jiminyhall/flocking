@@ -28,6 +28,11 @@
     <button class="press press-round press-amber" onclick='alignmentChange(0.1)'>/\</button>
     <button class="press press-round press-amber" onclick='alignmentChange(-0.1)'>\/</button>
 
+    <span>Cohesion Weight: <span id="cohesionVal"></span></span>
+    <button class="press press-round press-amber" onclick='cohesionChange(0.1)'>/\</button>
+    <button class="press press-round press-amber" onclick='cohesionChange(-0.1)'>\/</button>
+
+
   </div>
 
   <div id='info' style='display:none;'>
@@ -52,8 +57,9 @@
   var agents;     //list of all agents on the canvas
   var myInterval; //window timer
   var showBounds = true;
-  var boundsWeight = 1.0;
-  var alignmentWeight = 1.0;
+  var boundsWeight = 2.0;
+  var alignmentWeight = 0.0;
+  var cohesionWeight = 0.5;
 
   function boundsChange(val) {
     boundsWeight += val;
@@ -70,13 +76,18 @@
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
   }
 
+  function cohesionChange(val) {
+    cohesionWeight += val;
+    if(cohesionWeight < 0.0) cohesionWeight = 0.0;
+    if(cohesionWeight > 1.0) cohesionWeight = 1.0;
+    document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
+  }
 
   function showBoundsClicked(evt) {
     console.log("CB clicked");
     showBounds = evt.checked;
     clear();
     for(i=0; i<agents.length; i++) { agents[i].draw(); };
-
   }
 
   function add() {
@@ -89,14 +100,13 @@
   }
 
   function draw() {
-
     var ctx = document.getElementById('canvas').getContext('2d');
     ctx.canvas.width = window.innerWidth-20;
     ctx.canvas.height = window.innerHeight*0.9;
     document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
+    document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
     agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
-
   }
 
   function stop() {
@@ -139,16 +149,18 @@
            *     - find the angle to the new point (rotation)
            *     - apply weighting and add to existing rotation
            */
-          var averageLocation_X = neighbourhood.reduce(function (total, el) { return total+el.x; },agents[i].x) / neighbourhood.length+1;
-          var averageLocation_Y = neighbourhood.reduce(function (total, el) { return total+el.y; },agents[i].y) / neighbourhood.length+1;
+          var averageLocation_X = neighbourhood.reduce(function (total, el) { return total+el.x; },0) / neighbourhood.length;
+          var averageLocation_Y = neighbourhood.reduce(function (total, el) { return total+el.y; },0) / neighbourhood.length;
           var tx = averageLocation_X - agents[i].x;
           var ty = averageLocation_Y - agents[i].y;
-          var t_rot = Math.atan2(tx,ty) * (180/Math.PI);
+          // for some reason the atan function returns the -90 rotated, so use the two known sides, work out the
+          // resulting angle and alter so it is correct for this scenario.
+          var t_rot = Math.atan2(ty,tx) * (180/Math.PI) + 90;
           if(t_rot<0) t_rot=360+t_rot;
-          console.log("neighbours: " + neighbourhood.length + " t x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot);
           var diff_rot = t_rot-agents[i].rotation;
-          weightedRotation = diff_rot * 1;
-          agents[i].rotation=weightedRotation;
+          weightedRotation = diff_rot * cohesionWeight;
+          agents[i].rotation+=weightedRotation;
+          console.log("C_r: " + agents[i].rotation.toFixed(0) + " with nbrs: " + neighbourhood.length + " t_x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot.toFixed(0) + " diff: " + diff_rot);
 
         } else {
           // if no neighbours then randomise rotation
