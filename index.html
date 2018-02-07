@@ -90,6 +90,8 @@
     for(i=0; i<agents.length; i++) { agents[i].draw(); };
   }
 
+
+
   function add() {
     var ctx = document.getElementById('canvas').getContext('2d');
     agents.push(new Agent(Math.random()*ctx.canvas.width,     //x
@@ -107,6 +109,30 @@
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
     document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
     agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
+    ctx.canvas.onmousedown = onmousedown;
+  }
+
+  function onmousedown(e) {
+
+    /* NEED TO FIGURE OUT THE EVENT X/Ys AND WHAT THEY RETURN FROM THE MOUSE EVENT */
+    
+    var ctx = document.getElementById('canvas').getContext('2d');
+    console.log("Mouse clicked: " + (e.clientX-ctx.canvas.offsetTop) + "," + (e.clientY-ctx.canvas.offsetLeft));
+    //check if any of the existing agents have been clicked (return first one)
+    for(var i=0; i<agents.length; i++)
+    {
+      //console.log(agents[i].image.height + " " + agents[i].y);
+      var ag_x = agents[i].x;
+      var ag_y = agents[i].y;
+      var ag_w = agents[i].image.width;
+      var ag_h = agents[i].image.height;
+      console.log( ag_x + "," + ag_y + " " + ag_w + "," + ag_h);
+
+      if(e.clientX >= ag_x && e.clientX <= (ag_x+ag_w) && e.clientY >=ag_y && e.clientY <= (ag_y+ag_h))
+        console.log("X+Y hit");
+
+
+    }
   }
 
   function stop() {
