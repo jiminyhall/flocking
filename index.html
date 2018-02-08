@@ -54,19 +54,19 @@
    *    - uniform grid collision detection
    */
 
-  var agents;     //list of all agents on the canvas
-  var myInterval; //window timer
+  var agents;                 //list of all agents on the canvas
+  var myInterval;             //window timer
   var showBounds = true;
   var boundsWeight = 2.0;
-  var alignmentWeight = 0.0;
-  var cohesionWeight = 0.5;
+  var alignmentWeight = 0.4;
+  var cohesionWeight = 0.1;
+  var speed;
 
   function boundsChange(val) {
     boundsWeight += val;
     if(boundsWeight < 0.1) boundsWeight = 0.1;
     document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
-    clear();
-    for(i=0; i<agents.length; i++) { agents[i].draw(); };
+    redraw();
   }
 
   function alignmentChange(val) {
@@ -74,6 +74,7 @@
     if(alignmentWeight < 0.0) alignmentWeight = 0.0;
     if(alignmentWeight > 1.0) alignmentWeight = 1.0;
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
+    redraw();
   }
 
   function cohesionChange(val) {
@@ -81,13 +82,13 @@
     if(cohesionWeight < 0.0) cohesionWeight = 0.0;
     if(cohesionWeight > 1.0) cohesionWeight = 1.0;
     document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
+    redraw();
   }
 
   function showBoundsClicked(evt) {
     console.log("CB clicked");
     showBounds = evt.checked;
-    clear();
-    for(i=0; i<agents.length; i++) { agents[i].draw(); };
+    redraw();
   }
 
 
@@ -99,6 +100,7 @@
                           Math.random()*360,                  //rotation
                           (Math.random()*2)+1,                //speed - was using a randomised value but removing for alignment // (Math.random()*2)+1,
                           "bird.png"));                       //sprite
+    redraw();
   }
 
   function draw() {
@@ -108,23 +110,42 @@
     document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
     document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
-    agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
+    agents = [];
+    // agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
     ctx.canvas.onmousedown = onmousedown;
+    // redraw();
+  }
+
+
+  function windowToCanvas(canvas, x, y) {
+    var bbox = canvas.getBoundingClientRect();
+
+    return {
+      x: x - bbox.left * (canvas.width  / bbox.width),
+      y: y - bbox.top  * (canvas.height / bbox.height)
+    };
   }
 
   function onmousedown(e) {
 
-    /* NEED TO FIGURE OUT THE EVENT X/Ys AND WHAT THEY RETURN FROM THE MOUSE EVENT
+    /* On a mousedown event all agents are checked to see if they have been clicked on
+     * if they have then a selection box is draw around the bird to signify its selection
+     *
+     * TO ADD:
+     *  - An information panel should pop-up showing the properties of the agent selected
+     *  - multi-select
      *
      * READ THIS: http://www.informit.com/articles/article.aspx?p=1903884&seqNum=6
      *
     */
 
     var ctx = document.getElementById('canvas').getContext('2d');
-    console.log("Mouse clicked: " + (e.clientX-ctx.canvas.offsetTop) + "," + (e.clientY-ctx.canvas.offsetLeft));
+    var loc = windowToCanvas(ctx.canvas, e.clientX, e.clientY);
+    console.log("Mouse clicked: " + loc.x.toFixed(2) + "," + loc.y.toFixed(2));
     //check if any of the existing agents have been clicked (return first one)
     for(var i=0; i<agents.length; i++)
     {
+      agents[i].selected = false;
       //console.log(agents[i].image.height + " " + agents[i].y);
       var ag_x = agents[i].x;
       var ag_y = agents[i].y;
@@ -132,21 +153,30 @@
       var ag_h = agents[i].image.height;
       console.log( ag_x + "," + ag_y + " " + ag_w + "," + ag_h);
 
-      if(e.clientX >= ag_x && e.clientX <= (ag_x+ag_w) && e.clientY >=ag_y && e.clientY <= (ag_y+ag_h))
+      if(loc.x >= ag_x-(ag_w/2) && loc.x <= (ag_x+(ag_w/2)) && loc.y >=ag_y-(ag_h/2) && loc.y <= (ag_y+(ag_h/2))) {
         console.log("X+Y hit");
-
-
+        agents[i].selected=true;
+      }
     }
+
+    redraw();
   }
 
   function stop() {
     clearInterval(myInterval);
   }
 
-  var speed;
+
 
   function start() {
     myInterval = setInterval(function() { update(); }, 20);
+  }
+
+  function redraw()  {
+    clear();
+    for(i=0; i<agents.length; i++) {
+        agents[i].draw();
+      }
   }
 
   function update() {
@@ -169,28 +199,37 @@
           /* 1. Alignment
            * This section adds in the weight of the rotation (between 0 and 1), finds the difference between the
            * target and current then adds a proportion based on the alignmentWeight */
-          var averageRotation = neighbourhood.reduce(function (total, el) { return total+el.rotation; },0) / neighbourhood.length;
-          var differenceRotation = averageRotation - agents[i].rotation;
-          var weightedRotation = differenceRotation * alignmentWeight;
-          agents[i].rotation+=weightedRotation;
+          if(alignmentWeight>0) {
+            var averageRotation = neighbourhood.reduce(function (total, el) { return total+el.rotation; },0) / neighbourhood.length;
+            var differenceRotation = averageRotation - agents[i].rotation;
+            var weightedRotation = differenceRotation * alignmentWeight;
+            agents[i].rotation+=weightedRotation;
+          }
 
           /* 2. Cohesion
            *     - find the average new X and Y from the neighbourhood
            *     - find the angle to the new point (rotation)
            *     - apply weighting and add to existing rotation
            */
-          var averageLocation_X = neighbourhood.reduce(function (total, el) { return total+el.x; },0) / neighbourhood.length;
-          var averageLocation_Y = neighbourhood.reduce(function (total, el) { return total+el.y; },0) / neighbourhood.length;
-          var tx = averageLocation_X - agents[i].x;
-          var ty = averageLocation_Y - agents[i].y;
-          // for some reason the atan function returns the -90 rotated, so use the two known sides, work out the
-          // resulting angle and alter so it is correct for this scenario.
-          var t_rot = Math.atan2(ty,tx) * (180/Math.PI) + 90;
-          if(t_rot<0) t_rot=360+t_rot;
-          var diff_rot = t_rot-agents[i].rotation;
-          weightedRotation = diff_rot * cohesionWeight;
-          agents[i].rotation+=weightedRotation;
-          console.log("C_r: " + agents[i].rotation.toFixed(0) + " with nbrs: " + neighbourhood.length + " t_x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot.toFixed(0) + " diff: " + diff_rot);
+          if(cohesionWeight>0) {
+            var averageLocation_X = neighbourhood.reduce(function (total, el) { return total+el.x; },0) / neighbourhood.length;
+            var averageLocation_Y = neighbourhood.reduce(function (total, el) { return total+el.y; },0) / neighbourhood.length;
+            var tx = averageLocation_X - agents[i].x;
+            var ty = averageLocation_Y - agents[i].y;
+            // for some reason the atan function returns the -90 rotated, so use the two known sides, work out the
+            // resulting angle and alter so it is correct for this scenario.
+            var t_rot = Math.atan2(ty,tx) * (180/Math.PI) + 90;
+            if(t_rot<0) t_rot=360+t_rot;
+            var diff_rot = t_rot-agents[i].rotation;
+            weightedRotation = diff_rot * cohesionWeight;
+            agents[i].rotation+=weightedRotation;
+            //console.log("C_r: " + agents[i].rotation.toFixed(0) + " with nbrs: " + neighbourhood.length + " t_x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot.toFixed(0) + " diff: " + diff_rot);
+          }
+
+          /* 3. seperation
+           *
+           *
+           */
 
         } else {
           // if no neighbours then randomise rotation
@@ -216,18 +255,25 @@
     this.collisionRadius = 100;
     this.rotation = rotation;
     this.speed = speed;
+    this.selected = false;
     this.x = x;
     this.y = y;
     this.image = new Image();
-
-    this.image.onload = function() {
-        document.getElementById('canvas').getContext('2d').drawImage(this,x-this.width/2,y-this.height/2);
-        document.getElementById('info').innerHTML = "x: " + x + "<br>y: " + y + "<br>r: " + rotation;
-    };
-
     this.image.src = src;
 
-    this.testCircle = function(dx,dy) {
+
+    this.image.onload = function() {
+        redraw();
+        //document.getElementById('canvas').getContext('2d').drawImage(this,x-this.width/2,y-this.height/2);
+        //document.getElementById('info').innerHTML = "x: " + x + "<br>y: " + y + "<br>r: " + rotation;
+    };
+
+
+
+
+  }
+
+  Agent.prototype.testCircle = function(dx,dy) {
         if( dx>this.x-((this.collisionRadius*boundsWeight)/2) &&
             dx<this.x+((this.collisionRadius*boundsWeight)/2) &&
             dy>this.y-((this.collisionRadius*boundsWeight)/2) &&
@@ -237,12 +283,9 @@
         } else {
           return false;
         }
-    }
+  }
 
-
-
-
-    this.forward = function() {
+  Agent.prototype.forward = function() {
 
       this.x += this.speed*Math.sin(this.rotation*Math.PI/180);
       this.y -= this.speed*Math.cos(this.rotation*Math.PI/180);
@@ -268,13 +311,13 @@
 
     };
 
-    this.rotate = function(degrees) {
+    Agent.prototype.rotate = function(degrees) {
         this.rotation += degrees;
         if(this.rotation>359) this.rotation=this.rotation-360;
         if(this.rotation<0) this.rotation=this.rotation+360;
     }
 
-    this.draw = function() {
+    Agent.prototype.draw = function() {
       var ctx = document.getElementById('canvas').getContext('2d');
       ctx.save();
       ctx.translate(this.x,this.y);
@@ -297,10 +340,20 @@
       // rotate and draw image
       ctx.rotate(this.rotation*Math.PI/180);
       ctx.drawImage(this.image,this.image.width/-2,this.image.height/-2);
+
+      // Draw the select area around selected agents
+      if(this.selected) {
+        ctx.beginPath();
+        ctx.rect( this.image.width/-2,
+                  this.image.height/-2,
+                  this.image.width,
+                  this.image.height);
+        ctx.strokeStyle='green';
+        ctx.stroke();
+      }
+
       ctx.restore();
       document.getElementById('info').innerHTML = "x: " + this.x + "<br>y: " +this.y+ "<br>r: " + this.rotation;
-    };
-
   }
 
 
