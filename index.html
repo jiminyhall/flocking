@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link href="css/press-2-0.css" rel="stylesheet">
+  <link href="css/flocking.css" rel=stylesheet">
 
   <title>Birds of a feather, flock together.</title>
 </head>
@@ -13,34 +14,62 @@
 
   <canvas id="canvas" style="border: 1px solid black;"></canvas>
 
-  <div id='controls'>
-    <button class="press press-round press-amber" onclick='start()'>Start</button>
-    <button class="press press-round press-amber" onclick='stop()'>Stop</button>
-    <button class="press press-round press-amber" onclick='add()'>Add</button>
-    <button class="press press-round press-amber" onclick='reset()'>Reset</button>
+  <div id='controls' style="text-align:center;">
 
-    <input type="checkbox" id="showBounds" name="showBounds" value="showBounds" checked="true" onclick="showBoundsClicked(this)">
-    <label for="showBounds">Bounds</label>
-    <span id="boundsVal"></span>
-    <button class="press press-circle press-amber press-sm" onclick='boundsChange(0.1)'>/\</button>
-    <button class="press press-circle press-amber press-sm" onclick='boundsChange(-0.1)'>\/</button>
+    <div class="divTable">
 
-    <span>Alignment Weight: <span id="alignmentVal"></span></span>
-    <button class="press press-circle press-amber press-sm" onclick='alignmentChange(0.1)'>/\</button>
-    <button class="press press-circle press-amber press-sm" onclick='alignmentChange(-0.1)'>\/</button>
+      <div class="divTableRow">
+        <div class="divTableCell">
+          <button class="press press-round press-amber press-sm" onclick='showHideCntrls()'>Hide Controls</button>
+        </div>
+      </div>
 
-    <span>Cohesion Weight: <span id="cohesionVal"></span></span>
-    <button class="press press-circle press-amber press-sm" onclick='cohesionChange(0.1)'>/\</button>
-    <button class="press press-circle press-amber press-sm" onclick='cohesionChange(-0.1)'>\/</button>
+      <div class="divTableRow">
+        <div class="divTableCell">
+          <button class="press press-round press-amber" onclick='start()'>Start</button>
+          <button class="press press-round press-amber" onclick='stop()'>Stop</button>
+          <button class="press press-round press-amber" onclick='add()'>Add</button>
+          <button class="press press-round press-amber" onclick='reset()'>Reset</button>
+        </div>
+      </div>
 
-    <span>Speed Weight: <span id="speedVal"></span></span>
-    <button class="press press-circle press-amber press-sm" onclick='speedChange(0.1)'>/\</button>
-    <button class="press press-circle press-amber press-sm" onclick='speedChange(-0.1)'>\/</button>
+      <div class="divTableRow">
+        <div class="divTableCell">
+          <input type="checkbox" id="showBounds" name="showBounds" value="showBounds" checked="true" onclick="showBoundsClicked(this)">
+          <label for="showBounds">Bounds</label>
+        </div>
+        <div class="divTableCell">
+          <span id="boundsVal"></span>
+        </div>
+        <div class="divTableCell">
+          <button class="press press-circle press-amber press-sm" onclick='boundsChange(0.1)'>/\</button>
+          <button class="press press-circle press-amber press-sm" onclick='boundsChange(-0.1)'>\/</button>
+        </div>
+      </div>
 
-    <span>Separation Weight: <span id="separationVal"></span></span>
-    <button class="press press-circle press-amber press-sm" onclick='separationChange(0.1)'>/\</button>
-    <button class="press press-circle press-amber press-sm" onclick='separationChange(-0.1)'>\/</button>
+      <div class="divTableRow">
+        <span>Alignment Weight: <span id="alignmentVal"></span></span>
+        <button class="press press-circle press-amber press-sm" onclick='alignmentChange(0.1)'>/\</button>
+        <button class="press press-circle press-amber press-sm" onclick='alignmentChange(-0.1)'>\/</button>
+      </div>
 
+      <div class="divTableRow">
+        <span>Cohesion Weight: <span id="cohesionVal"></span></span>
+        <button class="press press-circle press-amber press-sm" onclick='cohesionChange(0.1)'>/\</button>
+        <button class="press press-circle press-amber press-sm" onclick='cohesionChange(-0.1)'>\/</button>
+      </div>
+
+      <div class="divTableRow">
+        <span>Speed Weight: <span id="speedVal"></span></span>
+        <button class="press press-circle press-amber press-sm" onclick='speedChange(0.1)'>/\</button>
+        <button class="press press-circle press-amber press-sm" onclick='speedChange(-0.1)'>\/</button>
+      </div>
+
+      <div class="divTableRow">
+        <span>Separation Weight: <span id="separationVal"></span></span>
+        <button class="press press-circle press-amber press-sm" onclick='separationChange(0.1)'>/\</button>
+        <button class="press press-circle press-amber press-sm" onclick='separationChange(-0.1)'>\/</button>
+    </div>
   </div>
 
   <div id='info' style='display:none;'>
