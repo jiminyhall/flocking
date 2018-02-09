@@ -17,21 +17,29 @@
     <button class="press press-round press-amber" onclick='start()'>Start</button>
     <button class="press press-round press-amber" onclick='stop()'>Stop</button>
     <button class="press press-round press-amber" onclick='add()'>Add</button>
+    <button class="press press-round press-amber" onclick='reset()'>Reset</button>
 
     <input type="checkbox" id="showBounds" name="showBounds" value="showBounds" checked="true" onclick="showBoundsClicked(this)">
     <label for="showBounds">Bounds</label>
     <span id="boundsVal"></span>
-    <button class="press press-round press-amber" onclick='boundsChange(0.1)'>/\</button>
-    <button class="press press-round press-amber" onclick='boundsChange(-0.1)'>\/</button>
+    <button class="press press-circle press-amber press-sm" onclick='boundsChange(0.1)'>/\</button>
+    <button class="press press-circle press-amber press-sm" onclick='boundsChange(-0.1)'>\/</button>
 
     <span>Alignment Weight: <span id="alignmentVal"></span></span>
-    <button class="press press-round press-amber" onclick='alignmentChange(0.1)'>/\</button>
-    <button class="press press-round press-amber" onclick='alignmentChange(-0.1)'>\/</button>
+    <button class="press press-circle press-amber press-sm" onclick='alignmentChange(0.1)'>/\</button>
+    <button class="press press-circle press-amber press-sm" onclick='alignmentChange(-0.1)'>\/</button>
 
     <span>Cohesion Weight: <span id="cohesionVal"></span></span>
-    <button class="press press-round press-amber" onclick='cohesionChange(0.1)'>/\</button>
-    <button class="press press-round press-amber" onclick='cohesionChange(-0.1)'>\/</button>
+    <button class="press press-circle press-amber press-sm" onclick='cohesionChange(0.1)'>/\</button>
+    <button class="press press-circle press-amber press-sm" onclick='cohesionChange(-0.1)'>\/</button>
 
+    <span>Speed Weight: <span id="speedVal"></span></span>
+    <button class="press press-circle press-amber press-sm" onclick='speedChange(0.1)'>/\</button>
+    <button class="press press-circle press-amber press-sm" onclick='speedChange(-0.1)'>\/</button>
+
+    <span>Separation Weight: <span id="separationVal"></span></span>
+    <button class="press press-circle press-amber press-sm" onclick='separationChange(0.1)'>/\</button>
+    <button class="press press-circle press-amber press-sm" onclick='separationChange(-0.1)'>\/</button>
 
   </div>
 
@@ -60,7 +68,25 @@
   var boundsWeight = 2.0;
   var alignmentWeight = 0.4;
   var cohesionWeight = 0.1;
+  var separationWeight = 1;
+  var speedWeight = 0.1;
   var speed;
+
+  function separationChange(val) {
+    separationWeight += val;
+    if(separationWeight < 0.0) separationWeight = 0.0;
+    if(separationWeight > 1.0) separationWeight = 1.0;
+    document.getElementById('separationVal').innerHTML = separationWeight.toFixed(2);
+    redraw();
+  }
+
+  function speedChange(val) {
+    speedWeight += val;
+    if(speedWeight < 0.0) speedWeight = 0.0;
+    if(speedWeight > 1.0) speedWeight = 1.0;
+    document.getElementById('speedVal').innerHTML = speedWeight.toFixed(2);
+    redraw();
+  }
 
   function boundsChange(val) {
     boundsWeight += val;
@@ -110,11 +136,20 @@
     document.getElementById('boundsVal').innerHTML = boundsWeight.toFixed(2);
     document.getElementById('alignmentVal').innerHTML = alignmentWeight.toFixed(2);
     document.getElementById('cohesionVal').innerHTML = cohesionWeight.toFixed(2);
+    document.getElementById('speedVal').innerHTML = speedWeight.toFixed(2);
+    document.getElementById('separationVal').innerHTML = separationWeight.toFixed(2);
     agents = [];
     // agents = [new Agent(ctx.canvas.width/2,ctx.canvas.height/2,0,1,"bird.png")];
     ctx.canvas.onmousedown = onmousedown;
     // redraw();
   }
+
+  function reset() {
+    agents=[];
+    clearInterval(myInterval);
+    redraw();
+  };
+
 
 
   function windowToCanvas(canvas, x, y) {
@@ -191,9 +226,10 @@
 
         if(neighbourhood.length>0) {
           /* If one or more agents in within its radius (or neighbourhood) then there are three flocking behviours to apply
-           * 1. alignment - the agents will change path to an average
-           * 2. cohesion - the agents will try and move to be closer together
-           * 3. seperation - the agents will try and keep a certain distance away from each other
+           * 1.  alignment - the agents will change path to an average
+           * 2.  cohesion - the agents will try and move to be closer together
+           * 3.  seperation - the agents will try and keep a certain distance away from each other
+           * 4.  speed - the agents will try and match speed
            */
 
           /* 1. Alignment
@@ -226,10 +262,37 @@
             //console.log("C_r: " + agents[i].rotation.toFixed(0) + " with nbrs: " + neighbourhood.length + " t_x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot.toFixed(0) + " diff: " + diff_rot);
           }
 
-          /* 3. seperation
+          /* 3. separation
            *
            *
            */
+            var tooCloseAgents = neighbourhood.filter(function (el) { return el.distance<el.innerCollisionRadius; });
+            if(tooCloseAgents.length>0) {
+                var averageLocation_X = tooCloseAgents.reduce(function(total, el) { return total+el.x; },0) / tooCloseAgents.length;
+                var averageLocation_Y = tooCloseAgents.reduce(function(total, el) { return total+el.y; },0) / tooCloseAgents.length;
+                var tx = averageLocation_X - agents[i].x;
+                var ty = averageLocation_Y - agents[i].y;
+                // for some reason the atan function returns the -90 rotated, so use the two known sides, work out the
+                // resulting angle and alter so it is correct for this scenario.
+                // + 180 to change the direction AWAY from the location of the too close agent
+                var t_rot = Math.atan2(ty,tx) * (180/Math.PI) + 90 + 180;
+                if(t_rot<0) t_rot=360+t_rot;
+                var diff_rot = t_rot-agents[i].rotation;
+                weightedRotation = diff_rot * separationWeight;
+                agents[i].rotation+=weightedRotation;
+            }
+
+          /* 4. speed
+           *  - find the average speed of the neighbourhood agents
+           *  - alter the speed based on the speed weighting
+           */
+          if(speedWeight>0) {
+            var averageSpeed = neighbourhood.reduce(function (total, el) { return total+el.speed; },0) / neighbourhood.length;
+            var diff_speed = averageSpeed-agents[i].speed;
+            var weightedSpeed = diff_speed*speedWeight;
+            agents[i].speed+=weightedSpeed;
+          }
+
 
         } else {
           // if no neighbours then randomise rotation
@@ -252,7 +315,8 @@
   function Agent(x, y, rotation, speed, src) {
 
     this.neighbourCount = 0;
-    this.collisionRadius = 100;
+    this.collisionRadius = 100;     // the larger collision boundary (neighbours)
+    this.innerCollisionRadius = 30; // inner collision boundary (seperation)
     this.rotation = rotation;
     this.speed = speed;
     this.selected = false;
@@ -274,11 +338,18 @@
   }
 
   Agent.prototype.testCircle = function(dx,dy) {
+
+        this.distance = 0;
+
         if( dx>this.x-((this.collisionRadius*boundsWeight)/2) &&
             dx<this.x+((this.collisionRadius*boundsWeight)/2) &&
             dy>this.y-((this.collisionRadius*boundsWeight)/2) &&
             dy<this.y+((this.collisionRadius*boundsWeight)/2))
         {
+            // set up distance calc from dx, dy to this.x,this.y
+            var a = this.x - dx;
+            var b = this.y - dy;
+            this.distance = Math.sqrt( a*a + b*b );
             return true;
         } else {
           return false;
