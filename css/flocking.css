@@ -1,0 +1,34 @@
+body {
+  background-color: white;
+}
+
+.divTable {
+  display:none;
+  //display: inline-grid;
+  grid-template-columns: auto auto auto auto;
+  grid-gap: 3px;
+  // grid-template-rows: 40px 40px 40px 40px 40px;
+  background-color: rgba(0,0,0,0.3);
+  padding: 5px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  align-items: center;
+}
+
+#controls {
+  text-align: center;
+}
+
+.divTableItem {
+  //border: 1px solid rgba(0, 0, 0, 0.8);
+  background-color: rbga()
+  margin: 3px;
+}
+
+.long {
+  grid-column-start: 1;
+  grid-column-end: 4;
+  text-align: right;
+
+}
