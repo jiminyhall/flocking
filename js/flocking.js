@@ -212,6 +212,13 @@
             var differenceRotation = averageRotation - agents[i].rotation;
             var weightedRotation = differenceRotation * alignmentWeight;
             agents[i].rotation+=weightedRotation;
+
+            // Smooth the animation by not letting the agents turn more than 30 degrees
+            if(weightedRotation>30)
+              weightedRotation = 30;
+            else if(weightedRotation<-30)
+              weightedRotation = -30;
+
           }
 
           /* 2. Cohesion
@@ -230,6 +237,13 @@
             if(t_rot<0) t_rot=360+t_rot;
             var diff_rot = t_rot-agents[i].rotation;
             weightedRotation = diff_rot * cohesionWeight;
+
+            // Smooth the animation by not letting the agents turn more than 30 degrees
+            if(weightedRotation>30)
+              weightedRotation = 30;
+            else if(weightedRotation<-30)
+              weightedRotation = -30;
+
             agents[i].rotation+=weightedRotation;
             //console.log("C_r: " + agents[i].rotation.toFixed(0) + " with nbrs: " + neighbourhood.length + " t_x/y: " + tx.toFixed(0) +","+ty.toFixed(0) +  " @ " + t_rot.toFixed(0) + " diff: " + diff_rot);
           }
@@ -251,6 +265,13 @@
                 if(t_rot<0) t_rot=360+t_rot;
                 var diff_rot = t_rot-agents[i].rotation;
                 weightedRotation = diff_rot * separationWeight;
+
+                // Smooth the animation by not letting the agents turn more than 30 degrees
+                if(weightedRotation>30)
+                  weightedRotation = 30;
+                else if(weightedRotation<-30)
+                  weightedRotation = -30;
+
                 agents[i].rotation+=weightedRotation;
             }
 
