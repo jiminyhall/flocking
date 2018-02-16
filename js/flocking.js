@@ -88,7 +88,7 @@
                           Math.random()*ctx.canvas.height,    //y
                           Math.random()*360,                  //rotation
                           (Math.random()*2)+1,                //speed - was using a randomised value but removing for alignment // (Math.random()*2)+1,
-                          "bird.png"));                       //sprite
+                          "./images/bird.png"));                       //sprite
     redraw();
   }
 
