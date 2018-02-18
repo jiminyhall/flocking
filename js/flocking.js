@@ -23,7 +23,7 @@
 
 
   function ctrlsOnOff() {
-    console.log("Cntrls on/off");
+    //console.log("Cntrls on/off");
     if(showHideCntrls) {
       document.getElementById('controlPanel').style.display="none";
       document.getElementById('control-button').innerHTML="Show controls";
@@ -75,7 +75,7 @@
   }
 
   function showBoundsClicked(evt) {
-    console.log("CB clicked");
+    //console.log("CB clicked");
     showBounds = evt.checked;
     redraw();
   }
@@ -93,7 +93,7 @@
   }
 
   function draw() {
-    console.log("STARTING");
+    //console.log("STARTING");
     var ctx = document.getElementById('canvas').getContext('2d');
     ctx.canvas.width = window.innerWidth-20;
     ctx.canvas.height = window.innerHeight*0.9;
@@ -148,7 +148,7 @@
 
     var ctx = document.getElementById('canvas').getContext('2d');
     var loc = windowToCanvas(ctx.canvas, e.clientX, e.clientY);
-    console.log("Mouse clicked: " + loc.x.toFixed(2) + "," + loc.y.toFixed(2));
+    //console.log("Mouse clicked: " + loc.x.toFixed(2) + "," + loc.y.toFixed(2));
     //check if any of the existing agents have been clicked (return first one)
     for(var i=0; i<agents.length; i++)
     {
@@ -158,10 +158,10 @@
       var ag_y = agents[i].y;
       var ag_w = agents[i].image.width;
       var ag_h = agents[i].image.height;
-      console.log( ag_x + "," + ag_y + " " + ag_w + "," + ag_h);
+      //console.log( ag_x + "," + ag_y + " " + ag_w + "," + ag_h);
 
       if(loc.x >= ag_x-(ag_w/2) && loc.x <= (ag_x+(ag_w/2)) && loc.y >=ag_y-(ag_h/2) && loc.y <= (ag_y+(ag_h/2))) {
-        console.log("X+Y hit");
+        //{console.log("X+Y hit");
         agents[i].selected=true;
       }
     }
